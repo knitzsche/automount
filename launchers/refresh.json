@@ -1,0 +1,4 @@
+{
+    "action": "refresh",
+    "snaps": ["demo-release"]
+}
