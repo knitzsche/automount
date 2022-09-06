@@ -12,6 +12,7 @@ $SNAP/usr/local/bin/udisksctl monitor | grep --line-buffered " Device:" | while 
     RES=`$SNAP/usr/local/bin/udisksctl mount --no-user-interaction --block-device "$DEV"`
     # process returned value into the mount point string
     RES2=`echo $RES | cut -f4 -d\  | cut -f1 -d.`
-    echo $RES2 > $WATCHED
+    echo "" > $UNMOUNT
+    echo $RES2 > $MOUNT
   fi
 done

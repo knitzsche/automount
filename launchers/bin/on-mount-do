@@ -1,0 +1,31 @@
+#!/bin/bash
+
+MSG=""
+
+function log(){
+  echo -e "`date -Iseconds` ${1}" >> $LOG_SNAP_COMMON
+}
+
+# Outter loop ensures that the process continues after 
+# insertion of USB with inapplicable content
+# causes break on inner loop
+while true
+do
+  # create watched file just to be sure
+  [[ -n ${MOUNT} ]] && touch ${MOUNT}
+
+  while true;
+  do
+    sleep 5
+    #MOUNT is touched on automount and its content is the mount point
+    ${SNAP}/usr/bin/inotifywait -e open ${MOUNT}
+
+    #MNT is the mountpoint of the USB drive
+    MNT=`cat ${MOUNT}`
+
+    echo -e "Mount signal file ${MOUNT} touched. Mountpoint is ${MNT}."
+    MSG="\tMount signal file ${MOUNT} touched.\n\tMountpoint is ${MNT}.\n"
+    log "${MSG}"
+
+  done
+done

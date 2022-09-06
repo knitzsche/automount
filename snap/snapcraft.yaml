@@ -1,22 +1,24 @@
-name: automount-actions
+name: watching-mounts
 base: core20
-version: '0.2'
+version: '0.2.2'
 summary: Automatically mount USB and take actions
 description: |
   This snap waits for USB plug events of block devices and automatically
-  mounts such devices under the /media dir when inserted and then installs
-  asserted snaps found there. 
+  mounts such devices under the /media dir when inserted and then can take actions
 grade: stable
 confinement: strict
 
 environment:
   LD_LIBRARY_PATH: $SNAP/usr/local/lib
   # Signal file to inform on-mount-do daemon the mount point of USB
-  WATCHED: $SNAP_COMMON/watched
+  MOUNT: $SNAP_COMMON/mount
+  UNMOUNT: $SNAP_COMMON/unmount
+  LOG_SNAP_COMMON: $SNAP_COMMON/LOG.log
  
 apps:
   udisksd:
     command: usr/local/libexec/udisks2/udisksd
+    #install-mode: disable
     daemon: simple
     slots: [ service ]
     plugs:
@@ -24,6 +26,10 @@ apps:
       - mount-observe
   automount:
     command: bin/automount
+    daemon: simple
+    after: [ udisksd ]
+  autounmount:
+    command: bin/autounmount
     daemon: simple
     after: [ udisksd ]
   udiskctl:
@@ -35,7 +41,11 @@ apps:
   on-mount-do:
     command: bin/on-mount-do
     daemon: simple
-    plugs: [ snapd-control ]
+  on-unmount-do:
+    command: bin/on-unmount-do
+    daemon: simple
+  echo:
+    command: bin/echo.sh
 
 slots:
   service:
@@ -45,6 +55,9 @@ plugs:
     interface: udisks2
   removable-media:
     interface: removable-media
+  mount-observe:
+  block-devices:
+  hardware-observe:
 
 layout:
   /var/lib/udisks2:
@@ -59,15 +72,12 @@ layout:
     bind-file: $SNAP/usr/sbin/dumpe2fs
 
 parts:
-  actions:
-    source: actions
+  launchers:
+    source: launchers
     plugin: dump
   debs:
     plugin: nil
     stage-packages: [ curl, inotify-tools ] 
-  automount:
-    source: scripts
-    plugin: dump
   pkgs:
     plugin: nil
     stage-packages: [ mount, e2fsprogs ]

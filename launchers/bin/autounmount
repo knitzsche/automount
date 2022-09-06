@@ -1,0 +1,17 @@
+#!/bin/sh
+echo RUNNING
+
+sleep 1
+
+$SNAP/usr/local/bin/udisksctl monitor | grep --line-buffered "Removed"| grep --line-buffered "block_devices" | while read -r -- LINE; do
+
+  echo "$SNAP_NAME.autounmount found ${LINE}"
+  if echo $LINE | grep -q "[0-9]$"; then
+    PARTITION="$(echo $LINE | cut -f3 -d\ |  cut -f6 -d\/)"
+    echo $PARTITION
+    if [ -n "$PARTITION" ]; then
+      echo "`date`: $PARTITION" > $UNMOUNT
+      echo "" > $MOUNT
+    fi
+  fi
+done
